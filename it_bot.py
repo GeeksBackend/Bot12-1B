@@ -108,18 +108,45 @@ async def mailing(message:types.Message):
     if message.from_user.id in [731982105]:
         await message.reply("Введите свой текст для рассылки")
         await MailingState.message.set()
+        print("Check")
     else:
         await message.reply("У вас нет прав на рассылку")
 
-@dp.message_handler(state=MailingState.message)
+@dp.message_handler(content_types=types.ContentType.TEXT, state=MailingState.message)
 async def send_mailing(message:types.Message, state:FSMContext):
+    print(message.photo)
     await message.answer("Начинаю рассылку...")
     cursor.execute("SELECT id FROM users;")
     users_id = cursor.fetchall()
     print(users_id)
     for i in users_id:
         print(i[0])
-        await bot.send_message(i[0], message.text)
+        if message.photo:
+            await bot.send_photo(i[0], message.photo[0].file_id)
+        else:
+            await bot.send_message(i[0], message.text)
+    await message.answer("Рассылка окончена")
+    await state.finish()
+
+@dp.message_handler(content_types=types.ContentType.PHOTO, state=MailingState.message)
+async def receive_photo(message: types.Message, state: FSMContext):
+    print(message)
+    # Получите фотографию пользователя и сохраните ее, если необходимо
+    file_id = message.photo[-1].file_id
+
+    await message.answer("Фотография получена.")
+    await state.update_data(photo=file_id)
+
+     # Получите file_id из состояния
+    data = await state.get_data()
+    photo_file_id = data.get('photo')
+
+    cursor.execute("SELECT id FROM users;")
+    users_id = cursor.fetchall()
+    print(users_id)
+    for i in users_id:
+        print(i[0])
+        await bot.send_photo(i[0], photo_file_id, caption=message.caption)
     await message.answer("Рассылка окончена")
     await state.finish()
 
