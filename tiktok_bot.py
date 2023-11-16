@@ -40,10 +40,12 @@ async def get_url_video(message:types.Message):
                         video_file.write(requests.get(video_url).content)
                     await message.answer("Видео скачалось, отправляю...")
                     with open(f"video/{id_video}.mp4", 'rb') as read_video:
-                        await message.answer_video(read_video)
+                        await message.answer_video(read_video, caption="Hello")
             except Exception as error:
                 print(f"Error: {error}")
     else:
         await message.answer("Неверная ссылка на видео, попробуйте еще раз")
+
+"Нужно еще выводить в конце, сколько просмотров, лайков, комментарии на видео"
 
 executor.start_polling(dp)
